@@ -36,7 +36,8 @@ int presentButtonState4;
 // Water Flow Sensor
 volatile int flow_frequency;
 unsigned int l_hour;
-unsigned char flowmeter = 7;
+unsigned char flowmeter = 6
+    ;
 unsigned long currentTime;
 unsigned long cloopTime;
 
