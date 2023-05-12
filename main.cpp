@@ -9,34 +9,39 @@ LiquidCrystal_I2C lcd(0x27,16,4);
 #define BUTTON2 3
 #define BUTTON3 4
 #define BUTTON4 5
+//#define BUTTON5 6
 
 // Relay Pins
 #define RELAY1 10
 #define RELAY2 11
 #define RELAY3 12
 #define RELAY4 13
+//#define RELAY5 9
 
 // Relay State
 int relayState1 = LOW; 
 int relayState2 = LOW;
 int relayState3 = LOW;
 int relayState4 = LOW;
+//int relayState5 = LOW;
 
 // Previous and Present Button State
 int previousButtonState1;
 int previousButtonState2;
 int previousButtonState3;
 int previousButtonState4;
+//int previousButtonState5;
 
 int presentButtonState1;
 int presentButtonState2;
 int presentButtonState3;
 int presentButtonState4;
+//int presentButtonState5;
 
 // Water Flow Sensor
 volatile int flow_frequency;
 unsigned int l_hour;
-unsigned char flowmeter = 6;
+unsigned char flowmeter = 7;
 unsigned long currentTime;
 unsigned long cloopTime;
 
@@ -64,6 +69,7 @@ void setup() {
   pinMode(BUTTON2, INPUT_PULLUP);
   pinMode(BUTTON3, INPUT_PULLUP);
   pinMode(BUTTON4, INPUT_PULLUP);
+  //pinMode(BUTTON5, INPUT_PULLUP);
 
   // Relay
   pinMode(RELAY1, OUTPUT);
@@ -74,12 +80,15 @@ void setup() {
   digitalWrite(RELAY3, LOW);
   pinMode(RELAY4, OUTPUT);
   digitalWrite(RELAY4, LOW);
+  //pinMode(RELAY5, OUTPUT);
+  //digitalWrite(RELAY5, LOW);
 
   // Read Button State
   presentButtonState1 = digitalRead(BUTTON1);
   presentButtonState2 = digitalRead(BUTTON2);
   presentButtonState3 = digitalRead(BUTTON3);
   presentButtonState4 = digitalRead(BUTTON4);
+  //presentButtonState5 = digitalRead(BUTTON5);
 }
 
 void loop() {
@@ -133,4 +142,15 @@ void loop() {
     digitalWrite(RELAY4, relayState4);
     digitalRead(relayState4);
   }
+    
+  /*
+  // Relay 4
+  previousButtonState4 = presentButtonState4;      
+  presentButtonState4 = digitalRead(BUTTON4); 
+  if (previousButtonState4 == HIGH && presentButtonState4 == LOW) {
+    relayState4 = !relayState4;
+    digitalWrite(RELAY4, relayState4);
+    digitalRead(relayState4);
+  }
+  */
 }
