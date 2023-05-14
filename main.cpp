@@ -9,34 +9,47 @@ LiquidCrystal_I2C lcd(0x27, 16, 4);
 #define BUTTON2 3
 #define BUTTON3 4
 #define BUTTON4 5
-// #define BUTTON5 6
 
 // Relay Pins
 #define RELAY1 10
 #define RELAY2 11
 #define RELAY3 12
 #define RELAY4 13
-// #define RELAY5 9
 
 // Relay State
 int relayState1 = LOW;
 int relayState2 = LOW;
 int relayState3 = LOW;
 int relayState4 = LOW;
-// int relayState5 = LOW;
 
 // Previous and Present Button State
-int previousButtonState1;
-int previousButtonState2;
-int previousButtonState3;
-int previousButtonState4;
-// int previousButtonState5;
+int previousButtonState1 = LOW;
+int previousButtonState2 = LOW;
+int previousButtonState3 = LOW;
+int previousButtonState4 = LOW;
 
 int presentButtonState1;
 int presentButtonState2;
 int presentButtonState3;
 int presentButtonState4;
-// int presentButtonState5;
+
+// The last time the output pin was toggled
+unsigned long lastDebounceTime1 = 0;
+unsigned long lastDebounceTime2 = 0;
+unsigned long lastDebounceTime3 = 0;
+unsigned long lastDebounceTime4 = 0;
+
+// The debounce time; increase if the output flickers
+unsigned long debounceDelay1 = 50;    
+unsigned long debounceDelay2 = 50; 
+unsigned long debounceDelay3 = 50; 
+unsigned long debounceDelay4 = 50; 
+
+// Store the value of Button Pins
+int reading1;
+int reading2;
+int reading3;
+int reading4;
 
 // Water Flow Sensor
 int X;
@@ -47,6 +60,74 @@ float WATER = 0;
 float TOTAL = 0;
 float LS = 0;
 const int flowmeter = A0;
+
+void BUTTONPIN1() {
+    reading1 = digitalRead(BUTTON1);
+    if (reading1 != previousButtonState1) {
+        lastDebounceTime1 = millis();
+    }
+    if ((millis() - lastDebounceTime1) > debounceDelay1) {
+        if (reading1 != presentButtonState1) {
+            presentButtonState1 = reading1;
+            if (presentButtonState1 == HIGH) {
+                relayState1 = !relayState1;
+            }
+        }
+    }
+    digitalWrite(RELAY1, relayState1);
+    previousButtonState1 = reading1;
+}
+
+void BUTTONPIN2() {
+    reading2 = digitalRead(BUTTON2);
+    if (reading2 != previousButtonState2) {
+        lastDebounceTime2 = millis();
+    }
+    if ((millis() - lastDebounceTime2) > debounceDelay2) {
+        if (reading2 != presentButtonState2) {
+            presentButtonState2 = reading2;
+            if (presentButtonState2 == HIGH) {
+                relayState2 = !relayState2;
+            }
+        }
+    }
+    digitalWrite(RELAY2, relayState2);
+    previousButtonState2 = reading2;
+}
+
+void BUTTONPIN3() {
+    reading3 = digitalRead(BUTTON3);
+    if (reading3 != previousButtonState3) {
+        lastDebounceTime3 = millis();
+    }
+    if ((millis() - lastDebounceTime3) > debounceDelay3) {
+        if (reading3 != presentButtonState3) {
+            presentButtonState3 = reading3;
+            if (presentButtonState3 == HIGH) {
+                relayState3 = !relayState3;
+            }
+        }
+    }
+    digitalWrite(RELAY3, relayState3);
+    previousButtonState3 = reading3;
+}
+
+void BUTTONPIN4() {
+    reading4 = digitalRead(BUTTON4);
+    if (reading4 != previousButtonState4) {
+        lastDebounceTime4 = millis();
+    }
+    if ((millis() - lastDebounceTime4) > debounceDelay4) {
+        if (reading4 != presentButtonState4) {
+            presentButtonState4 = reading4;
+            if (presentButtonState4 == HIGH) {
+                relayState4 = !relayState4;
+            }
+        }
+    }
+    digitalWrite(RELAY4, relayState4);
+    previousButtonState4 = reading4;
+}
 
 void setup()
 {
@@ -64,31 +145,20 @@ void setup()
     pinMode(BUTTON2, INPUT_PULLUP);
     pinMode(BUTTON3, INPUT_PULLUP);
     pinMode(BUTTON4, INPUT_PULLUP);
-    // pinMode(BUTTON5, INPUT_PULLUP);
 
     // Relay
     pinMode(RELAY1, OUTPUT);
-    digitalWrite(RELAY1, LOW);
+    digitalWrite(RELAY1, relayState1);
     pinMode(RELAY2, OUTPUT);
-    digitalWrite(RELAY2, LOW);
+    digitalWrite(RELAY2, relayState2);
     pinMode(RELAY3, OUTPUT);
-    digitalWrite(RELAY3, LOW);
+    digitalWrite(RELAY3, relayState3);
     pinMode(RELAY4, OUTPUT);
-    digitalWrite(RELAY4, LOW);
-    // pinMode(RELAY5, OUTPUT);
-    // digitalWrite(RELAY5, LOW);
-
-    // Read Button State
-    presentButtonState1 = digitalRead(BUTTON1);
-    presentButtonState2 = digitalRead(BUTTON2);
-    presentButtonState3 = digitalRead(BUTTON3);
-    presentButtonState4 = digitalRead(BUTTON4);
-    // presentButtonState5 = digitalRead(BUTTON5);
+    digitalWrite(RELAY4, relayState4);
 }
 
 void loop()
 {
-
     // Flow Sensor
     X = pulseIn(flowmeter, HIGH);
     Y = pulseIn(flowmeter, LOW);
@@ -117,54 +187,9 @@ void loop()
     }
     delay(1000);
 
-    // Relay 1
-    previousButtonState1 = presentButtonState1;
-    presentButtonState1 = digitalRead(BUTTON1);
-    if (previousButtonState1 == LOW && presentButtonState1 == HIGH)
-    {
-        relayState1 = !relayState1;
-        digitalWrite(RELAY1, relayState1);
-        digitalRead(relayState1);
-    }
-
-    // Relay 2
-    previousButtonState2 = presentButtonState2;
-    presentButtonState2 = digitalRead(BUTTON2);
-    if (previousButtonState2 == HIGH && presentButtonState2 == LOW)
-    {
-        relayState2 = !relayState2;
-        digitalWrite(RELAY2, relayState2);
-        digitalRead(relayState2);
-    }
-
-    // Relay 3
-    previousButtonState3 = presentButtonState3;
-    presentButtonState3 = digitalRead(BUTTON3);
-    if (previousButtonState3 == HIGH && presentButtonState3 == LOW)
-    {
-        relayState3 = !relayState3;
-        digitalWrite(RELAY3, relayState3);
-        digitalRead(relayState3);
-    }
-
-    // Relay 4
-    previousButtonState4 = presentButtonState4;
-    presentButtonState4 = digitalRead(BUTTON4);
-    if (previousButtonState4 == HIGH && presentButtonState4 == LOW)
-    {
-        relayState4 = !relayState4;
-        digitalWrite(RELAY4, relayState4);
-        digitalRead(relayState4);
-    }
-
-    /*
-    // Relay 5
-    previousButtonState4 = presentButtonState4;
-    presentButtonState4 = digitalRead(BUTTON4);
-    if (previousButtonState4 == HIGH && presentButtonState4 == LOW) {
-      relayState4 = !relayState4;
-      digitalWrite(RELAY4, relayState4);
-      digitalRead(relayState4);
-    }
-    */
+    // Call all relays
+    BUTTONPIN1();
+    BUTTONPIN2();
+    BUTTONPIN3();
+    BUTTONPIN4();
 }
