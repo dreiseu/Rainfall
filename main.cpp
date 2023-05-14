@@ -2,13 +2,13 @@
 
 // LCD Library
 #include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x27, 16, 4);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // Pushbutton Pins
-#define BUTTON1 2
-#define BUTTON2 3
-#define BUTTON3 4
-#define BUTTON4 5
+#define BUTTON1 3
+#define BUTTON2 4
+#define BUTTON3 5
+#define BUTTON4 6
 
 // Relay Pins
 #define RELAY1 10
@@ -52,81 +52,14 @@ int reading3;
 int reading4;
 
 // Water Flow Sensor
-int X;
-int Y;
-float TIME = 0;
-float FREQUENCY = 0;
-float WATER = 0;
-float TOTAL = 0;
-float LS = 0;
-const int flowmeter = A0;
+#define flowmeter 2
+double flow;
+unsigned long currentTime;
+unsigned long lastTime;
+unsigned long pulse_freq;
 
-void BUTTONPIN1() {
-    reading1 = digitalRead(BUTTON1);
-    if (reading1 != previousButtonState1) {
-        lastDebounceTime1 = millis();
-    }
-    if ((millis() - lastDebounceTime1) > debounceDelay1) {
-        if (reading1 != presentButtonState1) {
-            presentButtonState1 = reading1;
-            if (presentButtonState1 == HIGH) {
-                relayState1 = !relayState1;
-            }
-        }
-    }
-    digitalWrite(RELAY1, relayState1);
-    previousButtonState1 = reading1;
-}
-
-void BUTTONPIN2() {
-    reading2 = digitalRead(BUTTON2);
-    if (reading2 != previousButtonState2) {
-        lastDebounceTime2 = millis();
-    }
-    if ((millis() - lastDebounceTime2) > debounceDelay2) {
-        if (reading2 != presentButtonState2) {
-            presentButtonState2 = reading2;
-            if (presentButtonState2 == HIGH) {
-                relayState2 = !relayState2;
-            }
-        }
-    }
-    digitalWrite(RELAY2, relayState2);
-    previousButtonState2 = reading2;
-}
-
-void BUTTONPIN3() {
-    reading3 = digitalRead(BUTTON3);
-    if (reading3 != previousButtonState3) {
-        lastDebounceTime3 = millis();
-    }
-    if ((millis() - lastDebounceTime3) > debounceDelay3) {
-        if (reading3 != presentButtonState3) {
-            presentButtonState3 = reading3;
-            if (presentButtonState3 == HIGH) {
-                relayState3 = !relayState3;
-            }
-        }
-    }
-    digitalWrite(RELAY3, relayState3);
-    previousButtonState3 = reading3;
-}
-
-void BUTTONPIN4() {
-    reading4 = digitalRead(BUTTON4);
-    if (reading4 != previousButtonState4) {
-        lastDebounceTime4 = millis();
-    }
-    if ((millis() - lastDebounceTime4) > debounceDelay4) {
-        if (reading4 != presentButtonState4) {
-            presentButtonState4 = reading4;
-            if (presentButtonState4 == HIGH) {
-                relayState4 = !relayState4;
-            }
-        }
-    }
-    digitalWrite(RELAY4, relayState4);
-    previousButtonState4 = reading4;
+void pulse() {
+  pulse_freq++;
 }
 
 void setup()
@@ -134,11 +67,14 @@ void setup()
     Serial.begin(9600);
 
     // LCD
-    lcd.init();
+    lcd.begin();
     lcd.backlight();
 
     // Flow Meter
     pinMode(flowmeter, INPUT);
+    attachInterrupt(0, pulse, RISING); // Setup Interrupt
+    currentTime = millis();
+    lastTime = currentTime;
 
     // Pushbutton
     pinMode(BUTTON1, INPUT_PULLUP);
@@ -159,37 +95,86 @@ void setup()
 
 void loop()
 {
-    // Flow Sensor
-    X = pulseIn(flowmeter, HIGH);
-    Y = pulseIn(flowmeter, LOW);
-    TIME = X + Y;
-    FREQUENCY = 1000000 / TIME;
-    WATER = FREQUENCY / 7.5;
-    LS = WATER / 60;
-    if (FREQUENCY >= 0) {
-        if (isinf(FREQUENCY)) {
-            lcd.clear();
-            lcd.setCursor(0, 0);
-            lcd.print("Flow Rate ");
-            lcd.setCursor(0, 1);
-            lcd.print("0.00");
-            lcd.print(" L/m");
-        }
-        else {
-            //TOTAL = TOTAL + LS;
-            lcd.clear();
-            lcd.setCursor(0, 0);
-            lcd.print("Flow Rate ");
-            lcd.setCursor(0, 1);
-            lcd.print(WATER);
-            lcd.print(" L/m");
+  currentTime = millis();
+   // Every second, calculate and print L/Min
+   if(currentTime >= (lastTime + 1000))
+   {
+      lastTime = currentTime; 
+      // Pulse frequency (Hz) = 7.5Q, Q is flow rate in L/min.
+      flow = (pulse_freq / 7.5); 
+      pulse_freq = 0; // Reset Counter
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Flow Rate");
+      lcd.setCursor(0, 1);
+      lcd.print(flow);
+      lcd.print("L/min");
+      Serial.print(flow); 
+      Serial.println(" L/Min");
+   }
+
+    // Relay1
+    reading1 = digitalRead(BUTTON1);
+    if (reading1 != previousButtonState1) {
+        lastDebounceTime1 = millis();
+    }
+    if ((millis() - lastDebounceTime1) > debounceDelay1) {
+        if (reading1 != presentButtonState1) {
+            presentButtonState1 = reading1;
+            if (presentButtonState1 == HIGH) {
+                relayState1 = !relayState1;
+            }
         }
     }
-    delay(1000);
+    digitalWrite(RELAY1, relayState1);
+    //Serial.println(relayState1);
+    previousButtonState1 = reading1;
 
-    // Call all relays
-    BUTTONPIN1();
-    BUTTONPIN2();
-    BUTTONPIN3();
-    BUTTONPIN4();
+    // Relay2
+    reading2 = digitalRead(BUTTON2);
+    if (reading2 != previousButtonState2) {
+        lastDebounceTime2 = millis();
+    }
+    if ((millis() - lastDebounceTime2) > debounceDelay2) {
+        if (reading2 != presentButtonState2) {
+            presentButtonState2 = reading2;
+            if (presentButtonState2 == HIGH) {
+                relayState2 = !relayState2;
+            }
+        }
+    }
+    digitalWrite(RELAY2, relayState2);
+    previousButtonState2 = reading2;
+
+    // Relay3
+    reading3 = digitalRead(BUTTON3);
+    if (reading3 != previousButtonState3) {
+        lastDebounceTime3 = millis();
+    }
+    if ((millis() - lastDebounceTime3) > debounceDelay3) {
+        if (reading3 != presentButtonState3) {
+            presentButtonState3 = reading3;
+            if (presentButtonState3 == HIGH) {
+                relayState3 = !relayState3;
+            }
+        }
+    }
+    digitalWrite(RELAY3, relayState3);
+    previousButtonState3 = reading3;
+
+    // Relay4
+    reading4 = digitalRead(BUTTON4);
+    if (reading4 != previousButtonState4) {
+        lastDebounceTime4 = millis();
+    }
+    if ((millis() - lastDebounceTime4) > debounceDelay4) {
+        if (reading4 != presentButtonState4) {
+            presentButtonState4 = reading4;
+            if (presentButtonState4 == HIGH) {
+                relayState4 = !relayState4;
+            }
+        }
+    }
+    digitalWrite(RELAY4, relayState4);
+    previousButtonState4 = reading4;
 }
