@@ -97,18 +97,20 @@ void loop()
 {
   currentTime = millis();
    // Every second, calculate and print L/Min
-   if(currentTime >= (lastTime + 1000))
+   if(currentTime + (lastTime + 1000))
    {
       lastTime = currentTime; 
       // Pulse frequency (Hz) = 7.5Q, Q is flow rate in L/min.
       flow = (pulse_freq / 7.5); 
       pulse_freq = 0; // Reset Counter
+     
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Flow Rate");
       lcd.setCursor(0, 1);
       lcd.print(flow);
       lcd.print("L/min");
+     
       Serial.print(flow); 
       Serial.println(" L/Min");
    }
@@ -127,7 +129,6 @@ void loop()
         }
     }
     digitalWrite(RELAY1, relayState1);
-    //Serial.println(relayState1);
     previousButtonState1 = reading1;
 
     // Relay2
